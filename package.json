@@ -1,0 +1,38 @@
+{
+    "name": "kindle-highlights-api",
+    "version": "1.0.0",
+    "description": "MERN API for Kindle My Clippings daily highlights (public + admin).",
+    "main": "src/server.js",
+    "scripts": {
+        "dev": "nodemon src/server.js",
+        "start": "node src/server.js",
+        "test": "jest --runInBand",
+        "test:watch": "jest --watch"
+    },
+    "keywords": [],
+    "author": "Al Amin Khan | alaminkhan2010@gmail.com",
+    "license": "MIT",
+    "dependencies": {
+        "bcryptjs": "^2.4.3",
+        "cookie-parser": "^1.4.6",
+        "cors": "^2.8.5",
+        "dotenv": "^16.4.5",
+        "express": "^4.19.2",
+        "express-rate-limit": "^7.4.0",
+        "helmet": "^7.1.0",
+        "jsonwebtoken": "^9.0.2",
+        "luxon": "^3.5.0",
+        "mongodb": "^6.19.0",
+        "mongoose": "^8.6.0",
+        "morgan": "^1.10.0",
+        "multer": "^1.4.5-lts.1",
+        "node-cron": "^3.0.3",
+        "swagger-jsdoc": "^6.2.8",
+        "swagger-ui-express": "^5.0.1"
+    },
+    "devDependencies": {
+        "nodemon": "^3.1.0",
+        "jest": "^29.7.0",
+        "supertest": "^7.0.0"
+    }
+}
