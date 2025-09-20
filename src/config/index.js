@@ -1,3 +1,24 @@
+function parseTrustProxy(value) {
+    if (value === undefined) {
+        return process.env.VERCEL ? 1 : false;
+    }
+
+    if (value === "false" || value === "0") {
+        return false;
+    }
+
+    if (value === "true") {
+        return true;
+    }
+
+    const numeric = Number(value);
+    if (!Number.isNaN(numeric)) {
+        return numeric;
+    }
+
+    return value;
+}
+
 const ORIGINS = (process.env.CORS_ORIGINS || "*")
     .split(",")
     .map((s) => s.trim());
@@ -31,9 +52,11 @@ module.exports = {
         process.env.PUBLIC_RATE_LIMIT_MAX || "60",
         10
     ),
+    TRUST_PROXY: parseTrustProxy(process.env.TRUST_PROXY),
     CORS_OPTIONS,
     ADMIN_BOOTSTRAP_TOKEN: process.env.ADMIN_BOOTSTRAP_TOKEN,
-    DAILY_WINDOW_MODE: process.env.DAILY_WINDOW_MODE || "daily",  // daily|halfday
+    DAILY_WINDOW_MODE: process.env.DAILY_WINDOW_MODE || "daily", // daily|halfday
     TZ: process.env.TZ || "Asia/Dhaka",
-    NO_REPEAT_DAYS: parseInt(process.env.NO_REPEAT_DAYS || '15', 10),
+    NO_REPEAT_DAYS: parseInt(process.env.NO_REPEAT_DAYS || "15", 10),
+    ENABLE_LOCAL_SCHEDULER: process.env.ENABLE_LOCAL_SCHEDULER === "true",
 };
