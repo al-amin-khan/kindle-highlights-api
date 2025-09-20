@@ -32,23 +32,54 @@ function mulberry32(a) {
     };
 }
 
-/** Compute current window (daily or halfday) in Asia/Dhaka */
-function getWindowInfo(now = DateTime.now().setZone(TZ)) {
-    const dayStart = now.startOf("day");
+let warnedInvalidZone = false;
+
+function getZonedNow() {
+    const zoned = DateTime.now().setZone(TZ);
+    if (zoned.isValid) {
+        return zoned;
+    }
+
+    if (!warnedInvalidZone) {
+        console.warn(
+            `[time] invalid timezone ${TZ} detected; falling back to system zone`
+        );
+        warnedInvalidZone = true;
+    }
+
+    return DateTime.now();
+}
+
+function ensureZoned(dateTimeLike) {
+    if (dateTimeLike && typeof dateTimeLike.setZone === "function") {
+        const zoned = dateTimeLike.setZone(TZ);
+        if (zoned.isValid) {
+            return zoned;
+        }
+    }
+
+    return getZonedNow();
+}
+
+/** Compute current window (daily or halfday) in configured TZ */
+function getWindowInfo(now) {
+    const current = ensureZoned(now);
+    const dayStart = current.startOf("day");
+
     if (DAILY_WINDOW_MODE === "halfday") {
-        const isFirstHalf = now.hour < 12;
+        const isFirstHalf = current.hour < 12;
         const start = isFirstHalf ? dayStart : dayStart.plus({ hours: 12 });
         const end = isFirstHalf
             ? dayStart.plus({ hours: 12 })
             : dayStart.plus({ days: 1 });
         const key = `${dayStart.toISODate()}_${isFirstHalf ? "00" : "12"}`;
         return { key, start, end };
-    } else {
-        const start = dayStart;
-        const end = dayStart.plus({ days: 1 });
-        const key = dayStart.toISODate(); // e.g., 2025-09-17
-        return { key, start, end };
     }
+
+    const start = dayStart;
+    const end = dayStart.plus({ days: 1 });
+    const key = dayStart.toISODate();
+    return { key, start, end };
 }
 
 /** Deterministic shuffle using seed derived from key */
@@ -77,11 +108,11 @@ async function ensureDailySet() {
     let doc = await DailySet.findOne({ key }).lean();
     if (doc) return { doc, start, end };
 
-    // Build pools
-    const cutoff = DateTime.now()
-        .setZone(TZ)
-        .minus({ days: NO_REPEAT_DAYS })
-        .toJSDate();
+    const repeatWindowDays = Number.isFinite(NO_REPEAT_DAYS)
+        ? NO_REPEAT_DAYS
+        : 0;
+    const now = getZonedNow();
+    const cutoff = now.minus({ days: repeatWindowDays }).toJSDate();
 
     // Prefer highlights not seen in the last NO_REPEAT_DAYS (or never seen)
     const preferred = await Highlight.find({
